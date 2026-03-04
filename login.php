@@ -1,17 +1,19 @@
 <?php
-	session_start();
-	include("./settings/connect_datebase.php");
-	
-	if (isset($_SESSION['user'])) {
-		if($_SESSION['user'] != -1) {
-			
-			$user_query = $mysqli->query("SELECT * FROM `users` WHERE `id` = ".$_SESSION['user']);
-			while($user_read = $user_query->fetch_row()) {
-				if($user_read[3] == 0) header("Location: user.php");
-				else if($user_read[3] == 1) header("Location: admin.php");
-			}
-		}
- 	}
+	include("ajax/token_verify.php");
+
+	if(isset($_COOKIE['token'])) {
+	    $data = tokenVerify($_COOKIE['token']);
+
+	    if($data) {
+	        if($data['roll'] == 0) {
+	            header("Location: user.php");
+	            exit;
+	        } else if($data['roll'] == 1) {
+	            header("Location: admin.php");
+	            exit;
+	        }
+	    }
+	}
 ?>
 <html>
 	<head> 
@@ -72,7 +74,7 @@
 				
 				// AJAX запрос
 				$.ajax({
-					url         : 'ajax/login_user.php',
+					url         : 'http://auth.permaviat.ru/index.php',
 					type        : 'POST', // важно!
 					data        : data,
 					cache       : false,
@@ -89,7 +91,7 @@
 							button.className = "button";
 							alert("Логин или пароль не верный.");
 						} else {
-							localStorage.setItem("token", _data);
+							document.cookie = "token=" + _data + "; path=/";
 							location.reload();
 							loading.style.display = "none";
 							button.className = "button";
